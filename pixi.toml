@@ -2,12 +2,20 @@
 authors = ["Soham Karandikar <sohamk10@gmail.com>"]
 channels = ["conda-forge", "https://prefix.dev/automsvc"]
 name = "rocky"
-platforms = ["linux-64", "win-64"]
+platforms = ["linux-64", "win-64", "osx-arm64"]
 version = "0.1.0"
 
 # Linux uses LLVM Clang
 [target.linux-64.tasks]
 configure = "cmake -S . -B build -G \"Ninja\" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_C_COMPILER=$CONDA_PREFIX/bin/clang -DCMAKE_CXX_COMPILER=$CONDA_PREFIX/bin/clang++-22"
+run = { cmd = "./build/rocky", depends-on = ["compile"] }
+clean = "rm -r build"
+compile = { cmd = "cmake --build build", depends-on = ["configure"] }
+test = { cmd = "ctest --test-dir build -L {{ label }}", depends-on = ["compile"], args = [{ arg = "label", default = ".+" }] }
+lit = { cmd = "ctest --test-dir build -L \"lit/{{ label }}\"", depends-on = ["compile"], args = [{ arg = "label", default = ".+" }] }
+
+[target.osx-arm64.tasks]
+configure = "cmake -S . -B build -G \"Ninja\" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++"
 run = { cmd = "./build/rocky", depends-on = ["compile"] }
 clean = "rm -r build"
 compile = { cmd = "cmake --build build", depends-on = ["configure"] }
