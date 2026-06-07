@@ -1,3 +1,9 @@
+/**
+ * @file lexer.c
+ * @brief Lexer implementation.
+ * @ingroup Lexer
+ */
+
 #include <rocky/lexer/token.h>
 #include <rocky/lexer/lexer.h>
 #include <ctype.h>
@@ -5,10 +11,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-//initialize lexer with source code
+/** @copydoc lexer_init */
 void lexer_init(Lexer *lexer, const char *source){
-    
-    lexer->start=source;  
+
+    lexer->start=source;
     lexer->current=source;
 
     lexer->line=1;
@@ -16,11 +22,16 @@ void lexer_init(Lexer *lexer, const char *source){
 
 }
 
+
+/**
+ * @brief Checks if lexer has reached end of input.
+ * @param lexer Lexer state.
+ */
 static bool isAtEnd(Lexer *lexer){
     return *lexer->current == '\0';
 }
 
-//read next char, consume and return 
+//read next char, consume and return
 static char lexer_advance(Lexer *lexer){
     if(*lexer->current == '\n'){
         lexer->line++;
@@ -63,7 +74,7 @@ static void skip_whitespace(Lexer *lexer){
                 if(peekNext(lexer)=='/'){
                     while(peek(lexer)!='\n' && !isAtEnd(lexer)){
                         lexer_advance(lexer);
-                    } 
+                    }
                 }else{
                     return;
                 }
@@ -75,10 +86,10 @@ static void skip_whitespace(Lexer *lexer){
     }
 }
 
-//create token 
+//create token
 static Token make_token(Lexer *lexer, TokenKind type){
-    
-    Token token;  
+
+    Token token;
     token.type=type;
     token.start=lexer->start;
     token.length = (int)(lexer->current - lexer->start);
@@ -87,7 +98,7 @@ static Token make_token(Lexer *lexer, TokenKind type){
 
 }
 
-//lexeme points to the error message string 
+//lexeme points to the error message string
 static Token errorToken(Lexer *lexer, const char* message){
     Token token;
     token.type=TOKEN_ERROR;
@@ -142,8 +153,8 @@ static TokenKind checkKeyword(Lexer *lexer, int start, int length, const char* r
 }
 
 //for recognizing keywords
-static TokenKind identifierType(Lexer *lexer){ 
-  
+static TokenKind identifierType(Lexer *lexer){
+
   switch(lexer->start[0]){
     case 'e': return checkKeyword(lexer, 1, 3, "lse", TOKEN_ELSE);
     case 'i': return checkKeyword(lexer, 1, 1, "f", TOKEN_IF);
@@ -171,6 +182,7 @@ static Token identifier(Lexer *lexer){
     return make_token(lexer, identifierType(lexer));
 }
 
+/** @copydoc lexer_next_token */
 Token lexer_next_token(Lexer *lexer){
 
     //skip whitespace
@@ -184,7 +196,7 @@ Token lexer_next_token(Lexer *lexer){
     char c = *lexer->current;
     lexer_advance(lexer);
 
-    if(isalpha(c) || c =='_') return identifier(lexer); 
+    if(isalpha(c) || c =='_') return identifier(lexer);
 
     if(isdigit(c)) return number(lexer);
 
@@ -201,7 +213,7 @@ Token lexer_next_token(Lexer *lexer){
 
         case '/':
             return make_token(lexer, TOKEN_SLASH);
-        
+
         case '%':
             return make_token(lexer, TOKEN_PERCENT);
 
@@ -213,28 +225,28 @@ Token lexer_next_token(Lexer *lexer){
 
         case ')':
             return make_token(lexer, TOKEN_RPAREN);
-        
+
         case '{':
             return make_token(lexer, TOKEN_LBRACE);
 
         case '}':
             return make_token(lexer, TOKEN_RBRACE);
-        
+
         case ',':
             return make_token(lexer, TOKEN_COMMA);
-        
+
         case ';':
             return make_token(lexer, TOKEN_SEMICOLON);
 
         case '=':
             return make_token(lexer, match(lexer, '=')?TOKEN_EQEQ:TOKEN_EQUAL);
-        
+
         case '!':
             return make_token(lexer, match(lexer, '=')?TOKEN_BANGEQ:TOKEN_BANG);
-        
+
         case '<':
             return make_token(lexer, match(lexer, '=') ? TOKEN_LTEQ : match(lexer, '<') ? TOKEN_LSHIFT : TOKEN_LT);
-        
+
         case '>':
             return make_token(lexer, match(lexer, '=') ? TOKEN_GTEQ : match(lexer, '>') ? TOKEN_RSHIFT : TOKEN_GT );
 
@@ -243,14 +255,14 @@ Token lexer_next_token(Lexer *lexer){
 
         case '|':
             return make_token(lexer, match(lexer, '|')?TOKEN_PIPEPIPE:TOKEN_PIPE);
-        
+
         case '~':
             return make_token(lexer, TOKEN_TILDE);
-        
+
         case '"':
             return string(lexer);  //check test case
 
-        default : 
+        default :
             return make_token(lexer, TOKEN_INVALID);
     }
 
